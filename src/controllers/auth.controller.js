@@ -115,4 +115,60 @@ export async function login(req, res) {
 export function logout(req, res) {
     res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production' }); // Clear the cookie
     res.status(200).json({ success: true, message: 'Logout successful' }); // Send a response indicating successful logout
-}   
+}
+
+
+export async function onboard(req, res) {
+    try {
+        const userId = req.user._id; // Get the user ID from the request object
+        const { name, bio, nativeLanguage, learningLanguage, country } = req.body; // Destructure the request body
+
+        if (!name || !bio || !nativeLanguage || !learningLanguage || !country) {
+            return res.status(400).json({
+                message: 'All fields are required',
+                missingFields: [
+                    !name ? 'name' : null,
+                    !bio ? 'bio' : null,
+                    !nativeLanguage ? 'nativeLanguage' : null,
+                    !learningLanguage ? 'learningLanguage' : null,
+                    !country ? 'country' : null,
+                ],
+            });
+        }
+
+
+        const updatedUser = await User.findByIdAndUpdate(userId, {
+            ...req.body, // Update the user with the request body
+            isVerified: true, // Set isVerified to true
+        }, { new: true }); // Update the user in the database
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' }); // If user not found, return 404
+        }
+
+
+
+
+        try {
+            await upsertStreamUser({
+                id: updatedUser._id.toString(), // Convert ObjectId to string
+                name: updatedUser.name,
+                image: updatedUser.profilePicture || "", // Use the random avatar URL
+            }); // Upsert the user in StreamChat
+            console.log(`User ${updatedUser.name} upserted in Stream successfully`); // Log success message
+        } catch (streamError) {
+            console.error("Error upserting user in Stream", streamError.message); // Log the error
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'User verified successfully',
+            user: updatedUser, // Return the updated user object
+        });
+
+
+    } catch (error) {
+        console.error("Error in onboarding controller", error); // Log the error
+        res.status(500).json({ message: 'Error in onboarding controller', error });
+    }
+}// This function handles user onboarding
