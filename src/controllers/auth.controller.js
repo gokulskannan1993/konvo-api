@@ -1,9 +1,9 @@
+import { upsertStreamUser } from '../lib/stream.js';
 import User from '../models/User.js'; // Adjust the import based on your project structure
 import jwt from 'jsonwebtoken'; // Importing JWT library
 
 
 // This function handles user signup
-// It takes the request and response objects as parameters  
 export async function signup(req, res) {
     const { email, password, name } = req.body;
     // Here you would typically hash the password and save the user to the database
@@ -35,7 +35,22 @@ export async function signup(req, res) {
             profilePicture: randomAvatar, // Assign the random avatar URL
         });
 
-        // TODO: CREATE USER IN STREAM AS WELL
+        try {
+            await upsertStreamUser({
+                id: newUser._id.toString(), // Convert ObjectId to string
+                name: newUser.name,
+                image: newUser.profilePicture || "", // Use the random avatar URL
+            }); // Upsert the user in StreamChat
+            console.log(`User ${newUser.name} upserted in Stream successfully`); // Log success message
+
+
+        } catch (error) {
+            console.error("Error upserting user in Stream", error); // Log the error   
+        }
+
+
+
+
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Generate a JWT token
         res.cookie('jwt', token, {
             httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
@@ -96,7 +111,7 @@ export async function login(req, res) {
     }
 }
 
-
+// This function handles user logout
 export function logout(req, res) {
     res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production' }); // Clear the cookie
     res.status(200).json({ success: true, message: 'Logout successful' }); // Send a response indicating successful logout
