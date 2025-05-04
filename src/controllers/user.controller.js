@@ -1,0 +1,89 @@
+import User from "../models/User.js"; // Import the User model for database operations
+import FriendRequests from "../models/FriendRequests.js"; // Import the FriendRequests model for friend request operations
+import mongoose from "mongoose"; // Import mongoose for ObjectId type checking
+
+export async function getRecommendedUsers(req, res) {
+    try {
+        const userId = req.user.id; // Get the logged-in user's ID from the request object
+        const currentUser = req.user; // Get the current user object from the request
+        const recommendedUsers = await User.find({
+            $and: [
+                { _id: { $ne: userId } }, // Exclude the logged-in user from recommendations
+                { _id: { $nin: currentUser.friends } }, // Exclude users already in the logged-in user's friends list
+                { isVerified: true }, // Only include verified users
+            ]
+        }) // Find users excluding the logged-in user
+            .limit(10) // Limit the number of recommended users to 10
+            .select("-password -__v"); // Exclude password and version fields from the result
+
+        res.status(200).json(recommendedUsers); // Send the recommended users as a JSON response
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching recommended users", error }); // Handle errors and send an error response
+    }
+}
+
+
+export async function getFriendsList(req, res) {
+    try {
+        const userId = req.user.id; // Get the logged-in user's ID from the request object
+        const currentUser = await User.findById(userId) // Find the current user by ID
+            .select("friends") // Only select the friends field
+            .populate("friends", "name profilePicture nativeLanguage learningLanguage"); // Populate the friends field with user details
+        res.status(200).json(currentUser.friends); // Send the friends list as a JSON response
+    } catch (error) {
+        console.error("Error fetching friends list:", error); // Log the error for debugging
+        res.status(500).json({ message: "Error fetching friends list", error }); // Handle errors and send an error response
+
+    }
+}
+
+
+
+export async function sendFriendRequest(req, res) {
+    try {
+        const { id: recepientId } = req.params; // Get the user ID from the request parameters
+        const myId = req.user.id; // Get the logged-in user's ID from the request object
+
+        if (myId === recepientId) { // Check if the user is trying to send a friend request to themselves
+            return res.status(400).json({ message: "You cannot send a friend request to yourself" }); // Send an error response
+        }
+
+
+        const recepient = await User.findById(recepientId); // Find the recipient user by ID
+        if (!recepient) { // Check if the recipient user exists
+            return res.status(404).json({ message: "Recepient not found" }); // Send an error response
+        }
+
+        if (recepient.friends.includes(myId)) { // Check if the recipient is already a friend
+            return res.status(400).json({ message: "You are already friends with this user" }); // Send an error response
+        }
+
+
+        const existingRequests = await FriendRequests.findOne({
+            $or: [
+                { sender: myId, recepient: recepientId }, // Check if the logged-in user has sent a request to the recipient
+                { sender: recepientId, recepient: myId } // Check if the recipient has sent a request to the logged-in user
+            ]
+        })// Check if there are existing friend requests between the two users
+        if (existingRequests) { // Check if the recipient has already sent a friend request to the logged-in user
+            return res.status(400).json({ message: "Friend request already sent" }); // Send an error response
+        }
+
+
+        const newFriendRequest = new FriendRequests({ // Create a new friend request object
+            sender: myId, // Set the sender to the logged-in user
+            recepient: recepientId, // Set the recipient to the user ID from the request parameters
+        });
+
+
+        res.status(200).json({ message: "Friend request sent successfully" }); // Send a success response
+
+
+
+       
+    } catch (error) {
+        console.error("Error sending friend request:", error); // Log the error for debugging
+        res.status(500).json({ message: "Error sending friend request", error }); // Handle errors and send an error response
+    }
+}
+
