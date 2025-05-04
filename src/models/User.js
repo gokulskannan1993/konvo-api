@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);    // Create a model from the schema and export it 
 
 userSchema.pre("save", async function (next) { // Middleware to hash password before saving
+    if (!this.isModified("password")) return next(); // If password is not modified, proceed to next middleware
+
+    // If password is modified, hash it
+    // The 'this' keyword refers to the current document being saved 
     try {
         const salt = await bcrypt.genSalt(10); // Generate a salt
         this.password = await bcrypt.hash(this.password, salt); // Hash the password
@@ -62,7 +66,7 @@ userSchema.pre("save", async function (next) { // Middleware to hash password be
     } catch (error) {
         next(error); // Pass the error to the next middleware
     }
-}
+}); // Middleware to hash password before saving
 
 
 export default User; // Export the User model for use in other parts of the application
