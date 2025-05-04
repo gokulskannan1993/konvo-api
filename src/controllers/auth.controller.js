@@ -1,6 +1,9 @@
 import User from '../models/User.js'; // Adjust the import based on your project structure
 import jwt from 'jsonwebtoken'; // Importing JWT library
 
+
+// This function handles user signup
+// It takes the request and response objects as parameters  
 export async function signup(req, res) {
     const { email, password, name } = req.body;
     // Here you would typically hash the password and save the user to the database
@@ -53,11 +56,48 @@ export async function signup(req, res) {
     }
 }
 
+// This function handles user login
 export async function login(req, res) {
-    res.send('Login route');
+    try {
+        const { email, password } = req.body; // Destructure email and password from request body
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Check if user exists (not implemented here)
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Check if password is correct (not implemented here)
+        const isPasswordCorrect = await user.comparePassword(password)
+        if (!isPasswordCorrect) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Generate a JWT token
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000,
+            sameSite: 'Strict',
+        }); // Set the cookie with the token
+
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user, // Return the user object
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error in login controller', error });
+    }
 }
 
 
 export function logout(req, res) {
-    res.send('Logout route');
+    res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production' }); // Clear the cookie
+    res.status(200).json({ success: true, message: 'Logout successful' }); // Send a response indicating successful logout
 }   
