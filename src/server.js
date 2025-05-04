@@ -1,7 +1,9 @@
-import dotenv from 'dotenv';
+import "dotenv/config"; // Automatically loads environment variables from .env file
 import express from 'express';
 
-dotenv.config(); // Load environment variables from .env file
+
+import authRoutes from './routes/auth.route.js'; // Importing the auth routes
+
 
 
 const app = express();
@@ -9,21 +11,7 @@ const PORT = process.env.PORT || 5000; // Use PORT from .env or default to 5000
 
 // Middleware
 app.use(express.json());
-
-// Routes
-app.get('/api/auth/signup', (req, res) => {
-    res.send('Signup route');
-});
-
-app.get('/api/auth/login', (req, res) => {
-    res.send('Login route');
-});
-
-
-app.get('/api/auth/logout', (req, res) => {
-    res.send('logout route');
-});
-
+app.use("/api/auth", authRoutes); // Use the auth routes under the /api/auth path
 
 
 // Start the server
