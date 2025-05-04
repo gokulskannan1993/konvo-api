@@ -123,3 +123,48 @@ export async function acceptFriendRequest(req, res) {
         res.status(500).json({ message: "Error accepting friend request", error }); //
     }
 }
+
+
+
+
+export async function getFriendRequests(req, res) {
+    try {
+        const myId = req.user.id; // Get the logged-in user's ID from the request object
+
+        const incomingRequests = await FriendRequests.find({
+            recepient: myId, // Find friend requests where the logged-in user is the recipient
+            status: "pending" // Only include pending requests
+        }).populate("sender", "name profilePicture learningLanguage nativeLanguage"); // Populate the sender field with user details
+
+
+        const acceptedRequests = await FriendRequests.find({
+            sender: myId, // Find friend requests where the logged-in user is the sender
+            status: "accepted" // Only include accepted requests
+        }).populate("recepient", "name profilePicture"); // Populate the recipient field with user details
+        // Combine incoming and accepted requests into a single array   
+
+        res.status(200).json({ incomingRequests, acceptedRequests }); // Send the friend requests as a JSON response
+    } catch (error) {
+        console.error("Error fetching friend requests:", error); // Log the error for debugging
+        res.status(500).json({ message: "Error fetching friend requests", error }); // Handle errors and send an error response
+    }
+}
+
+
+
+export async function getOutgoingFriendRequests(req, res) {
+    try {
+        const myId = req.user.id; // Get the logged-in user's ID from the request object
+
+        const outgoingRequests = await FriendRequests.find({
+            sender: myId, // Find friend requests where the logged-in user is the sender
+            status: "pending" // Only include pending requests
+        }).populate("recepient", "name profilePicture learningLanguage nativeLanguage"); // Populate the recipient field with user details
+
+
+        res.status(200).json(outgoingRequests); // Send the outgoing friend requests as a JSON response
+    } catch (error) {
+        console.error("Error fetching outgoing friend requests:", error); // Log the error for debugging
+        res.status(500).json({ message: "Error fetching outgoing friend requests", error }); // Handle errors and send an error response
+    }
+}
