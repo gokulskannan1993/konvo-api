@@ -80,10 +80,46 @@ export async function sendFriendRequest(req, res) {
 
 
 
-       
+
     } catch (error) {
         console.error("Error sending friend request:", error); // Log the error for debugging
         res.status(500).json({ message: "Error sending friend request", error }); // Handle errors and send an error response
     }
 }
 
+
+
+
+export async function acceptFriendRequest(req, res) {
+    try {
+        const myId = req.user.id; // Get the logged-in user's ID from the request object
+
+        const { id: requestId } = req.params; // Get the request ID from the request parameters
+
+        const friendRequest = await FriendRequests.findById(requestId); // Find the friend request by ID
+
+
+        if (!friendRequest) {
+            return res.status(404).json({ message: "Friend request not found" }); // Send an error response if the request does not exist
+        } // Check if the friend request exists
+
+
+        if (friendRequest.recepient.toString() !== myId) { // Check if the logged-in user is the recipient of the request
+            return res.status(403).json({ message: "You are not authorized to accept this friend request" }); // Send an error response if not authorized
+        }
+
+        friendRequest.status = "accepted"; // Update the status of the friend request to accepted
+        await friendRequest.save(); // Save the updated friend request to the database
+
+
+        // Add each user to the other's friends list
+        await User.findByIdAndUpdate(myId, { $addToSet: { friends: friendRequest.sender } }); // Add the sender to the recipient's friends list
+        await User.findByIdAndUpdate(friendRequest.sender, { $addToSet: { friends: myId } }); // Add the recipient to the sender's friends list
+        res.status(200).json({ message: "Friend request accepted successfully" }); // Send a success response
+
+
+    } catch (error) {
+        console.error("Error accepting friend request:", error); // Log the error for debugging
+        res.status(500).json({ message: "Error accepting friend request", error }); //
+    }
+}
