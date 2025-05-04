@@ -14,6 +14,7 @@ if (!apiKey || !apiSecret) {
 const streamClient = StreamChat.getInstance(apiKey, apiSecret); // Create a StreamChat instance
 
 
+// Function to upsert a user in StreamChat
 export const upsertStreamUser = async (userData) => {
     try {
         await streamClient.upsertUsers([userData]); // Upsert the user in StreamChat
@@ -24,7 +25,8 @@ export const upsertStreamUser = async (userData) => {
     }
 };
 
-// TODO: create user in stream as well
+
+// Function to generate a token for a user
 export const generateStreamToken = (userId) => {
 
     try {
@@ -35,6 +37,5 @@ export const generateStreamToken = (userId) => {
         throw error; // Throw the error to be handled by the calling function
     }
 
-}// Generate a token for the user
-
+}
 
