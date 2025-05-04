@@ -1,8 +1,7 @@
 import "dotenv/config"; // Automatically loads environment variables from .env file
-import express from 'express';
-
-
+import express from 'express'; // Importing express framework
 import authRoutes from './routes/auth.route.js'; // Importing the auth routes
+import connectDB from "./lib/db.js"; // Importing the database connection function
 
 
 
@@ -17,4 +16,5 @@ app.use("/api/auth", authRoutes); // Use the auth routes under the /api/auth pat
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    connectDB(); // Connect to the database when the server starts
 });
