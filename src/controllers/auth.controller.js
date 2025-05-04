@@ -25,11 +25,11 @@ export async function signup(req, res) {
         const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`; // Simulate a random avatar URL
 
 
-        const newUser = new User({
+        const newUser = await User.create({
             email,
             password,
             name,
-            avatar: randomAvatar, // Assign the random avatar URL
+            profilePicture: randomAvatar, // Assign the random avatar URL
         });
 
         // TODO: CREATE USER IN STREAM AS WELL
@@ -49,7 +49,7 @@ export async function signup(req, res) {
         });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error creating user', error });
+        res.status(500).json({ message: 'Error in signup controller', error });
     }
 }
 

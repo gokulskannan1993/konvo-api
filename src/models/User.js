@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs"; // Import bcrypt for password hashing
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -52,7 +53,6 @@ const userSchema = new mongoose.Schema({
 });
 
 
-const User = mongoose.model("User", userSchema);    // Create a model from the schema and export it 
 
 userSchema.pre("save", async function (next) { // Middleware to hash password before saving
     if (!this.isModified("password")) return next(); // If password is not modified, proceed to next middleware
@@ -67,6 +67,9 @@ userSchema.pre("save", async function (next) { // Middleware to hash password be
         next(error); // Pass the error to the next middleware
     }
 }); // Middleware to hash password before saving
+
+
+const User = mongoose.model("User", userSchema);    // Create a model from the schema and export it 
 
 
 export default User; // Export the User model for use in other parts of the application
