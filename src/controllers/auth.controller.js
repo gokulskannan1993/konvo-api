@@ -25,7 +25,7 @@ export async function signup(req, res) {
         }
 
         const idx = Math.floor(Math.random() * 100) + 1; // Simulate a unique ID for the user
-        const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`; // Simulate a random avatar URL
+        const randomAvatar = `https://api.dicebear.com/5.x/avataaars/svg?seed=${Math.floor(Math.random() * 10000)}`; // Simulate a random avatar URL
 
 
         const newUser = await User.create({
