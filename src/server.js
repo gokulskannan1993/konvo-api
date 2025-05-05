@@ -5,6 +5,7 @@ import connectDB from "./lib/db.js"; // Importing the database connection functi
 import cookieParser from 'cookie-parser'; // Importing cookie-parser middleware
 import userRoutes from './routes/user.route.js'; // Importing the user routes
 import chatRoutes from './routes/chat.route.js'; // Importing the chat routes
+import cors from 'cors'; // Importing CORS middleware
 
 
 
@@ -13,6 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000; // Use PORT from .env or default to 5000
 
 // Middleware
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true })); // Enable CORS for the client URL
 app.use(cookieParser()); // Use cookie-parser middleware to parse cookies
 app.use(express.json()); // Use express.json() middleware to parse JSON request bodies
 app.use("/api/auth", authRoutes); // Use the auth routes under the /api/auth path
