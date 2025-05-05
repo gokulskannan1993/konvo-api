@@ -24,7 +24,7 @@ export async function signup(req, res) {
             return res.status(400).json({ message: 'User already exists, Use a different Email' });
         }
 
-        const idx = Math.floor(Math.random() * 100) + 1; // Simulate a unique ID for the user
+
         const randomAvatar = `https://api.dicebear.com/5.x/avataaars/svg?seed=${Math.floor(Math.random() * 10000)}`; // Simulate a random avatar URL
 
 
