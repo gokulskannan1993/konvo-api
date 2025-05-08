@@ -15,7 +15,7 @@ const __dirname = path.resolve(); // Get the current directory name
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../ui/dist"))); // Serve static files from the public directory
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../ui/dist/index.html")); // Serve index.html for all other routes
+    res.sendFile(path.join(__dirname, "../ui", "dist", "index.html")); // Serve index.html for all other routes
   });
 }
 
